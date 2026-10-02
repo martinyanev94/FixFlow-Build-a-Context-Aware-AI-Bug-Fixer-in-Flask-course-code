@@ -1,0 +1,2 @@
+# FixFlow-Build-a-Context-Aware-AI-Bug-Fixer-in-Flask-course-code
+Build FixFlow—a Flask AI bug fixer with Chat Completions—in about 48 minutes: a web app that keeps multi-turn chat context and turns a broken snippet into an explanation plus a proposed fix. You start with the project payoff and a secured first API call, then ship one core skill per lesson until the full explain-and-fix flow works end to end. You w
