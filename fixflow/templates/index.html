@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FixFlow</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 44rem; margin: 2rem auto; padding: 0 1rem; }
+    label { display: block; margin-top: 0.75rem; font-weight: 600; }
+    textarea, input { width: 100%; box-sizing: border-box; padding: 0.5rem; margin-top: 0.25rem; }
+    button { margin-top: 0.75rem; padding: 0.5rem 0.9rem; }
+    #chat-log { border: 1px solid #ccc; min-height: 10rem; padding: 0.75rem; margin: 1.25rem 0 0.75rem; }
+    #chat-form { display: flex; gap: 0.5rem; }
+    #message { flex: 1; margin-top: 0; }
+    #chat-form button { margin-top: 0; }
+    hr { margin: 1.5rem 0; border: none; border-top: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>FixFlow</h1>
+
+  <form id="fix-form">
+    <label for="buggy-code">Broken code</label>
+    <textarea id="buggy-code" rows="8">def average(nums):
+    return sum(nums) / len(nums)
+
+print(average([]))</textarea>
+
+    <label for="error-text">Error output</label>
+    <textarea id="error-text" rows="4">ZeroDivisionError: division by zero</textarea>
+
+    <button type="submit">Fix Code</button>
+  </form>
+
+  <label for="explanation-out">Explanation</label>
+  <textarea id="explanation-out" rows="6" readonly></textarea>
+
+  <label for="fixed-code-out">Proposed fix</label>
+  <textarea id="fixed-code-out" rows="8" readonly></textarea>
+
+  <hr>
+
+  <h2>Follow-up chat</h2>
+  <div id="chat-log"></div>
+  <form id="chat-form">
+    <input id="message" name="message" type="text" placeholder="Ask a follow-up..." autocomplete="off" required>
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    document.querySelector("#fix-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const code = document.querySelector("#buggy-code").value.trim();
+      const error = document.querySelector("#error-text").value.trim();
+      if (!code || !error) return;
+
+      const res = await fetch("/fix", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({code, error}),
+      });
+      const data = await res.json();
+      document.querySelector("#explanation-out").value =
+        data.explanation || data.error || "";
+      document.querySelector("#fixed-code-out").value =
+        data.fixed_code || "";
+
+      const log = document.querySelector("#chat-log");
+      log.innerHTML += `<p><strong>FixFlow:</strong> Explain-and-fix cycle complete.</p>`;
+    });
+
+    document.querySelector("#chat-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const input = document.querySelector("#message");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const log = document.querySelector("#chat-log");
+      log.innerHTML += `<p><strong>You:</strong> ${text}</p>`;
+
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: text}),
+      });
+      const data = await res.json();
+      const reply = data.reply || data.error || "No reply";
+      log.innerHTML += `<p><strong>Assistant:</strong> ${reply}</p>`;
+      input.value = "";
+    });
+  </script>
+</body>
+</html>
